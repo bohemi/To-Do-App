@@ -9,7 +9,7 @@ export default function TaskList({ tasks, removeButton, taskDoneCheckBox }) {
   return (
     <div className="m-auto w-1/2">
       {tasks.map((task) => (
-        <div
+        <div className="p-2 hover:p-4"
           key={task.id}
         >
           <TaskItem

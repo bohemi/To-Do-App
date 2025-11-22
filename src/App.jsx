@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TaskForm from "./components/TaskForm";
 import TaskList from "./components/TaskList";
 import CategoryFilter from "./components/CategoryFilter";
@@ -7,10 +7,43 @@ function App() {
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [category, setCategory] = useState("All");
-  // const [testState, setTestState] = useState(1);
+
+  // Load from localStorage once on mount
+  useEffect(() => {
+    const rawData = localStorage.getItem("items");
+    if (rawData) {
+      try {
+        const parsed = JSON.parse(rawData);
+        console.log(parsed);
+        if (Array.isArray(parsed)) {
+          setItems(parsed);
+        }
+      } catch (err) {
+        console.error("Failed to parse saved items:", err);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever items change
+  useEffect(() =>{
+    if (items.length > 0) {
+      localStorage.setItem("items", JSON.stringify(items));
+      
+    } else {
+      localStorage.removeItem("items");
+    }
+  }, [items]);
 
   const addItem = (task) => {
-    setItems((prev) => [...prev, task]);
+    // a safety block for local storage if we get wrong data in any case
+    const newTask = {
+      id: Date.now(),
+      title: task.title || "",
+      description: task.description || "",
+      type: task.type || "Work",
+      isTaskComplete: !!task.isTaskComplete,
+    };
+    setItems((prev) => [...prev, newTask]);
     setShowForm(false);
   };
 
@@ -21,10 +54,12 @@ function App() {
   const toggleTaskDone = (taskId) => {
     setItems((prev) =>
       // map every item and change items complete property to taskId. now here, mapping will run
-    // on all items despite being item found. Re-render will not happen since we are giving back
-    // the same values untill we find the taskId and change its value then we give the new value to re-render.
+      // on all items despite being item found. Re-render will not happen since we are giving back
+      // the same values untill we find the taskId and change its value then we give the new value to re-render.
       prev.map((item) =>
-        item.id === taskId ? { ...item, isTaskChecked: !item.isTaskChecked } : item
+        item.id === taskId
+          ? { ...item, isTaskChecked: !item.isTaskChecked }
+          : item
       )
     );
   };
